@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fixar – Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, sans-serif; background: #0f0f0f; color: white; min-height: 100vh; }
+.login { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 24px; }
+.login h1 { font-size: 32px; font-weight: 900; margin-bottom: 32px; }
+.login h1 span { color: #ff6a00; }
+.login input { width: 100%; max-width: 320px; background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 16px; color: white; font-size: 24px; text-align: center; letter-spacing: 8px; margin-bottom: 16px; outline: none; }
+.btn-login { width: 100%; max-width: 320px; background: #ff6a00; color: white; border: none; padding: 16px; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; }
+.main { display: none; }
+.main.show { display: block; }
+.header { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1a1a1a; }
+.logo { font-size: 22px; font-weight: 900; } .logo span { color: #ff6a00; }
+.count { background: #ff6a00; color: white; padding: 4px 12px; border-radius: 20px; font-size: 14px; font-weight: 700; }
+.orders { padding: 16px; }
+.order { background: #1a1a1a; border-radius: 16px; padding: 16px; margin-bottom: 12px; border-left: 4px solid #ff6a00; }
+.order.inprogress { border-left-color: #f59e0b; }
+.order.done { border-left-color: #22c55e; opacity: 0.5; }
+.order-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.order-name { font-size: 18px; font-weight: 700; }
+.order-info { font-size: 14px; color: #888; margin-bottom: 4px; }
+.order-service { display: inline-block; background: #ff6a00; color: white; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; margin: 6px 0; }
+.btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.btn-call { background: #1d4ed8; color: white; border: none; padding: 10px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; display: block; text-align: center; }
+.btn-devis { background: #7c3aed; color: white; border: none; padding: 10px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.btn-progress { background: #f59e0b; color: white; border: none; padding: 10px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.btn-done { background: #22c55e; color: white; border: none; padding: 10px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.btn-del { background: #333; color: #888; border: none; padding: 10px; border-radius: 10px; font-size: 13px; cursor: pointer; grid-column: span 2; }
+.new-badge { background: #ff6a00; color: white; font-size: 10px; padding: 2px 6px; border-radius: 6px; margin-left: 6px; animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; align-items: center; justify-content: center; padding: 24px; }
+.modal.show { display: flex; }
+.modal-box { background: #1a1a1a; border-radius: 20px; padding: 24px; width: 100%; max-width: 400px; }
+.modal-box h2 { font-size: 20px; font-weight: 900; margin-bottom: 20px; }
+.modal-box h2 span { color: #ff6a00; }
+.modal-box input, .modal-box textarea { width: 100%; background: #0f0f0f; border: 1px solid #333; border-radius: 10px; padding: 12px; color: white; font-size: 15px; margin-bottom: 12px; outline: none; }
+.modal-box textarea { height: 80px; resize: none; }
+.modal-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.btn-generate { background: #ff6a00; color: white; border: none; padding: 14px; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; }
+.btn-cancel { background: #333; color: #888; border: none; padding: 14px; border-radius: 10px; font-size: 15px; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="login" id="loginSection">
+  <h1>FIX<span>AR</span></h1>
+  <input type="password" id="passInput" placeholder="••••" onkeydown="if(event.key==='Enter')checkPass()">
+  <button class="btn-login" onclick="checkPass()">Entrer</button>
+</div>
+<div class="main" id="mainSection">
+  <div class="header">
+    <div class="logo">FIX<span>AR</span> <small style="color:#666;font-size:13px;font-weight:400;">Dashboard</small></div>
+    <span class="count" id="countBadge">0</span>
+  </div>
+  <div class="orders" id="ordersList"></div>
+</div>
+<div class="modal" id="devisModal">
+  <div class="modal-box">
+    <h2>📄 Devis <span>Fixar</span></h2>
+    <input type="number" id="devisPrice" placeholder="Prix (€)" min="0">
+    <input type="text" id="devisDuration" placeholder="Durée (ex: 2 heures)">
+    <textarea id="devisNotes" placeholder="Notes supplémentaires..."></textarea>
+    <div class="modal-btns">
+      <button class="btn-generate" onclick="generatePDF()">📥 Générer PDF</button>
+      <button class="btn-cancel" onclick="closeModal()">Annuler</button>
+    </div>
+  </div>
+</div>
+<script>
+let currentOrder = null;
+
+function checkPass() {
+  if (document.getElementById("passInput").value === "fixar2024") {
+    document.getElementById("loginSection").style.display = "none";
+    document.getElementById("mainSection").classList.add("show");
+    loadOrders();
+    setInterval(loadOrders, 8000);
+  } else { alert("Mot de passe incorrect!"); }
+}
+
+async function loadOrders() {
+  const res = await fetch("/orders");
+  const orders = await res.json();
+  const active = orders.filter(o => o.status !== "done");
+  document.getElementById("countBadge").textContent = active.length;
+  const list = document.getElementById("ordersList");
+  if (orders.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:60px;color:#444;">Aucune commande 🎉</div>';
+    return;
+  }
+  list.innerHTML = orders.map(o => `
+    <div class="order ${o.status === 'done' ? 'done' : o.status === 'inprogress' ? 'inprogress' : ''}">
+      <div class="order-top">
+        <div class="order-name">${o.name} ${!o.status || o.status === 'new' ? '<span class="new-badge">NEW</span>' : ''}</div>
+        <div style="font-size:11px;color:#555;">#${o.id}</div>
+      </div>
+      <div class="order-info">📞 ${o.phone}</div>
+      <div class="order-info">📍 ${o.address}</div>
+      <div class="order-service">${o.service}</div>
+      ${o.description ? `<div class="order-info" style="margin-top:6px;">💬 ${o.description}</div>` : ''}
+      <div class="btns">
+        <a href="tel:${o.phone}" class="btn-call">📞 Appeler</a>
+        <button class="btn-devis" onclick='openDevis(${JSON.stringify(o)})'>📄 Devis PDF</button>
+        <button class="btn-progress" onclick="setStatus(${o.id},'inprogress')">🔧 En cours</button>
+        <button class="btn-done" onclick="setStatus(${o.id},'done')">✅ Terminé</button>
+        <button class="btn-del" onclick="deleteOrder(${o.id})">🗑 Supprimer</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openDevis(order) {
+  currentOrder = order;
+  document.getElementById("devisModal").classList.add("show");
+}
+
+function closeModal() {
+  document.getElementById("devisModal").classList.remove("show");
+  currentOrder = null;
+}
+
+function generatePDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const price = document.getElementById("devisPrice").value;
+  const duration = document.getElementById("devisDuration").value;
+  const notes = document.getElementById("devisNotes").value;
+  const date = new Date().toLocaleDateString("fr-FR");
+  const validity = new Date(Date.now() + 7*24*60*60*1000).toLocaleDateString("fr-FR");
+
+  doc.setFillColor(15, 15, 15);
+  doc.rect(0, 0, 210, 297, 'F');
+
+  doc.setFillColor(255, 106, 0);
+  doc.rect(0, 0, 210, 40, 'F');
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(28);
+  doc.setFont("helvetica", "bold");
+  doc.text("FIXAR", 20, 25);
+
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "normal");
+  doc.text("Artisans a Marseille", 20, 35);
+
+  doc.setFontSize(18);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(255, 106, 0);
+  doc.text("DEVIS N° " + currentOrder.id, 20, 60);
+
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(150, 150, 150);
+  doc.text("Date: " + date, 20, 70);
+  doc.text("Valide jusqu'au: " + validity, 20, 78);
+
+  doc.setFillColor(26, 26, 26);
+  doc.roundedRect(15, 88, 180, 55, 3, 3, 'F');
+
+  doc.setTextColor(255, 106, 0);
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text("CLIENT", 25, 100);
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "normal");
+  doc.text(currentOrder.name, 25, 110);
+  doc.setTextColor(150, 150, 150);
+  doc.text(currentOrder.phone, 25, 118);
+  doc.text(currentOrder.address, 25, 126);
+  doc.text(currentOrder.service, 25, 134);
+
+  doc.setFillColor(26, 26, 26);
+  doc.roundedRect(15, 155, 180, 50, 3, 3, 'F');
+
+  doc.setTextColor(255, 106, 0);
+  doc.setFont("helvetica", "bold");
+  doc.text("DETAILS", 25, 167);
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "normal");
+  if (duration) doc.text("Duree: " + duration, 25, 178);
+  if (notes) doc.text("Notes: " + notes, 25, 188);
+
+  doc.setFillColor(255, 106, 0);
+  doc.roundedRect(15, 218, 180, 40, 3, 3, 'F');
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(14);
+  doc.text("PRIX TOTAL", 25, 232);
+  doc.setFontSize(24);
+  doc.text(price + " EUR", 25, 248);
+
+  doc.setFontSize(9);
+  doc.setTextColor(100, 100, 100);
+  doc.setFont("helvetica", "normal");
+  doc.text("FIXAR - Artisans a Marseille", 20, 280);
+  doc.text("Ce devis est valable 7 jours", 20, 287);
+
+  doc.save("Devis-Fixar-" + currentOrder.name + ".pdf");
+  closeModal();
+}
+
+async function setStatus(id, status) {
+  await fetch("/order/"+id+"/status", { method:"PATCH", headers:{"Content-Type":"application/json"}, body: JSON.stringify({status}) });
+  loadOrders();
+}
+
+async function deleteOrder(id) {
+  if (confirm("Supprimer cette commande?")) {
+    await fetch("/order/"+id, { method:"DELETE" });
+    loadOrders();
+  }
+}
+</script>
+</body>
+</html>

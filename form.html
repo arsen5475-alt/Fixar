@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fixar – Nouvelle commande</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, sans-serif; background: #0f0f0f; color: white; min-height: 100vh; }
+.header { padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; }
+.logo { font-size: 24px; font-weight: 900; } .logo span { color: #ff6a00; }
+.back { color: #666; text-decoration: none; font-size: 14px; }
+.form { padding: 24px; }
+.form h1 { font-size: 32px; font-weight: 900; margin-bottom: 8px; }
+.form h1 span { color: #ff6a00; }
+.form p { color: #666; margin-bottom: 32px; }
+.label { font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: block; }
+input, textarea, select { width: 100%; background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 16px; color: white; font-size: 16px; margin-bottom: 20px; outline: none; }
+input:focus, textarea:focus { border-color: #ff6a00; }
+textarea { height: 120px; resize: none; }
+.btn { width: 100%; background: #ff6a00; color: white; border: none; padding: 20px; border-radius: 16px; font-size: 18px; font-weight: 700; cursor: pointer; margin-top: 8px; }
+.success { display: none; text-align: center; padding: 40px 24px; }
+.success h2 { font-size: 28px; margin-bottom: 12px; }
+.success p { color: #666; margin-bottom: 32px; }
+.success a { display: block; background: #1a1a1a; color: white; text-decoration: none; padding: 16px; border-radius: 12px; }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">FIX<span>AR</span></div>
+  <a href="/" class="back">← Retour</a>
+</div>
+<div class="form" id="formSection">
+  <h1>Nouvelle <span>commande</span></h1>
+  <p>Dites-nous ce qui doit être réparé</p>
+  <label class="label">Votre nom</label>
+  <input type="text" id="name" placeholder="Jean Dupont">
+  <label class="label">Téléphone</label>
+  <input type="tel" id="phone" placeholder="+33 6 00 00 00 00">
+  <label class="label">Adresse</label>
+  <input type="text" id="address" placeholder="Rue, bâtiment, appartement">
+  <label class="label">Service</label>
+  <select id="service">
+    <option value="">-- Choisir --</option>
+    <option value="Plombier">🔧 Plombier</option>
+    <option value="Electricien">⚡ Électricien</option>
+    <option value="Peinture">🎨 Peinture</option>
+    <option value="Menuisier">🪵 Menuisier</option>
+    <option value="Carrelage">🏠 Carrelage</option>
+    <option value="General">🛠️ Général</option>
+  </select>
+  <label class="label">Description du problème</label>
+  <textarea id="description" placeholder="Décrivez votre problème..."></textarea>
+  <button class="btn" onclick="sendOrder()">🔧 Envoyer la demande</button>
+</div>
+<div class="success" id="successSection">
+  <div style="font-size:64px;margin-bottom:16px;">✅</div>
+  <h2>Commande reçue!</h2>
+  <p>Nous vous contacterons très bientôt</p>
+  <a href="/">← Retour à l'accueil</a>
+</div>
+<script>
+const params = new URLSearchParams(window.location.search);
+const service = params.get("service");
+if (service) {
+  const sel = document.getElementById("service");
+  for (let opt of sel.options) { if (opt.value === service) { opt.selected = true; break; } }
+}
+async function sendOrder() {
+  const name = document.getElementById("name").value;
+  const phone = document.getElementById("phone").value;
+  const address = document.getElementById("address").value;
+  const service = document.getElementById("service").value;
+  const description = document.getElementById("description").value;
+  if (!name || !phone || !address || !service) { alert("Remplissez tous les champs!"); return; }
+  const res = await fetch("/order", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({name, phone, address, service, description}) });
+  if (res.ok) {
+    document.getElementById("formSection").style.display = "none";
+    document.getElementById("successSection").style.display = "block";
+  }
+}
+</script>
+</body>
+</html>

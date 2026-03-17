@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fixar – Artisans à Marseille</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, sans-serif; background: #0f0f0f; color: white; min-height: 100vh; }
+.header { padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; }
+.logo { font-size: 28px; font-weight: 900; } .logo span { color: #ff6a00; }
+.hero { padding: 60px 24px 32px; text-align: center; }
+.hero h1 { font-size: 42px; font-weight: 900; line-height: 1.1; margin-bottom: 32px; }
+.hero h1 span { color: #ff6a00; }
+.services { padding: 0 24px; margin-bottom: 24px; }
+.services h2 { font-size: 14px; color: #666; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; }
+.grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.card { background: #1a1a1a; border-radius: 16px; padding: 20px 10px; text-align: center; border: 2px solid #222; cursor: pointer; text-decoration: none; display: block; }
+.card .icon { font-size: 32px; margin-bottom: 8px; }
+.card .label { font-size: 13px; color: #aaa; }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">FIX<span>AR</span></div>
+</div>
+<div class="hero">
+  <h1>Artisans à<br><span>Marseille</span></h1>
+</div>
+<div class="services">
+  <h2>Choisissez votre service</h2>
+  <div class="grid">
+    <a href="/form?service=Plombier" class="card"><div class="icon">🔧</div><div class="label">Plombier</div></a>
+    <a href="/form?service=Electricien" class="card"><div class="icon">⚡</div><div class="label">Électricien</div></a>
+    <a href="/form?service=Peinture" class="card"><div class="icon">🎨</div><div class="label">Peinture</div></a>
+    <a href="/form?service=Menuisier" class="card"><div class="icon">🪵</div><div class="label">Menuisier</div></a>
+    <a href="/form?service=Carrelage" class="card"><div class="icon">🏠</div><div class="label">Carrelage</div></a>
+    <a href="/form?service=General" class="card"><div class="icon">🛠️</div><div class="label">Général</div></a>
+  </div>
+</div>
+</body>
+</html>
