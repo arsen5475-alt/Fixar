@@ -6,20 +6,25 @@ const app = express();
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// 👉 DASHBOARD
+// 👉 ГЛАВНАЯ СТРАНИЦА (сайт)
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dashboard.html'));
+  res.sendFile(path.join(__dirname, 'site.html'));
 });
 
-// 👉 ФОРМА КЛИЕНТА
+// 👉 ФОРМА
 app.get('/form', (req, res) => {
   res.sendFile(path.join(__dirname, 'form.html'));
 });
 
-// 👉 БАЗА (временно)
+// 👉 DASHBOARD
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dashboard.html'));
+});
+
+// 👉 БАЗА
 let orders = [];
 
-// 👉 ПОЛУЧИТЬ ВСЕ ЗАКАЗЫ
+// 👉 ПОЛУЧИТЬ ЗАКАЗЫ
 app.get('/orders', (req, res) => {
   res.json(orders);
 });
