@@ -3,34 +3,68 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fixar Dashboard</title>
+<title>Fixar Pro</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body { margin:0; font-family:Arial; background:#0f0f0f; color:white; }
+body {
+  margin:0;
+  font-family:Arial;
+  background: radial-gradient(circle at top, #1a1a1a, #0f0f0f);
+  color:white;
+}
 
 /* SIDEBAR */
 .sidebar {
-  width:220px;
+  width:240px;
   height:100vh;
   background:#111;
   position:fixed;
   padding:20px;
 }
-.logo { font-size:22px; font-weight:bold; color:#ff6a00; margin-bottom:30px; }
-.menu div { margin:15px 0; color:#aaa; cursor:pointer; }
-.menu div:hover { color:white; }
+.logo { color:#ff6a00; font-size:22px; font-weight:bold; margin-bottom:30px; }
+.menu div {
+  padding:12px;
+  border-radius:8px;
+  color:#aaa;
+  cursor:pointer;
+}
+.menu div.active, .menu div:hover {
+  background:#1a1a1a;
+  color:white;
+}
 
 /* CONTENT */
-.content { margin-left:220px; padding:20px; }
+.content {
+  margin-left:240px;
+  padding:30px;
+}
+
+/* HEADER */
+.header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.btn {
+  background:#ff6a00;
+  padding:10px 16px;
+  border:none;
+  border-radius:10px;
+  color:white;
+}
 
 /* CARDS */
-.cards { display:flex; gap:15px; }
+.cards {
+  display:flex;
+  gap:15px;
+  margin-top:20px;
+}
 .card {
+  flex:1;
   background:#1a1a1a;
   padding:20px;
   border-radius:12px;
-  flex:1;
 }
 
 /* TABLE */
@@ -41,86 +75,65 @@ body { margin:0; font-family:Arial; background:#0f0f0f; color:white; }
   border-radius:12px;
 }
 table { width:100%; border-collapse:collapse; }
-th { text-align:left; color:#888; padding-bottom:10px; }
-td { padding:10px 0; border-bottom:1px solid #333; }
-
-/* BUTTON */
-button {
-  background:#ff6a00;
-  border:none;
-  padding:6px 10px;
-  border-radius:6px;
-  color:white;
-  cursor:pointer;
-}
+th { color:#777; text-align:left; }
+td { padding:12px 0; border-bottom:1px solid #333; }
 
 /* STATUS */
-.pending { color:#ffaa00; }
-.done { color:#00ff99; }
+.status {
+  padding:6px 12px;
+  border-radius:20px;
+  font-size:12px;
+}
+.pending { background:#ffaa0020; color:#ffaa00; }
+.done { background:#00ff9920; color:#00ff99; }
 
-/* MODAL */
-.modal {
-  display:none;
-  position:fixed;
-  top:0; left:0;
-  width:100%; height:100%;
-  background:#000a;
-}
-.modal-box {
-  background:#222;
-  padding:20px;
-  width:300px;
-  margin:100px auto;
-  border-radius:10px;
-}
-input {
-  width:100%;
-  padding:10px;
-  margin:10px 0;
-  border:none;
-  border-radius:6px;
+/* ACTION */
+.action button {
+  margin-right:5px;
 }
 </style>
 </head>
 
 <body>
 
-<!-- SIDEBAR -->
 <div class="sidebar">
   <div class="logo">FIXAR</div>
   <div class="menu">
-    <div>🏠 Dashboard</div>
+    <div class="active">🏠 Tableau de bord</div>
     <div>📦 Commandes</div>
     <div>👤 Clients</div>
+    <div>⚙️ Paramètres</div>
   </div>
 </div>
 
-<!-- CONTENT -->
 <div class="content">
 
-<h1>Panneau de commandes</h1>
+<div class="header">
+  <h1>Panneau de commandes</h1>
+  <button class="btn">+ Nouvelle commande</button>
+</div>
 
 <div class="cards">
-  <div class="card">Total: <span id="total">0</span></div>
-  <div class="card">En attente: <span id="pending">0</span></div>
-  <div class="card">Validé: <span id="done">0</span></div>
+  <div class="card">Total<br><b id="total">0</b></div>
+  <div class="card">En attente<br><b id="pending">0</b></div>
+  <div class="card">Validé<br><b id="done">0</b></div>
 </div>
 
 <canvas id="chart" height="80"></canvas>
 
 <div class="orders">
-  <h2>Commandes</h2>
+  <h2>Commandes récentes</h2>
 
   <table>
     <thead>
       <tr>
         <th>ID</th>
         <th>Client</th>
-        <th>Service</th>
         <th>Adresse</th>
+        <th>Service</th>
         <th>Status</th>
         <th>Prix</th>
-        <th>Action</th>
+        <th>Actions</th>
       </tr>
     </thead>
     <tbody id="orders"></tbody>
@@ -129,53 +142,39 @@ input {
 
 </div>
 
-<!-- MODAL -->
-<div class="modal" id="modal">
-  <div class="modal-box">
-    <h3>Entrer le devis (€)</h3>
-    <input id="price" placeholder="Ex: 250">
-    <button onclick="save()">Valider</button>
-  </div>
-</div>
-
 <script>
-let currentId = null;
-
 async function load() {
   const res = await fetch('/orders');
   const data = await res.json();
 
-  document.getElementById('total').innerText = data.length;
-
+  let html = '';
   let pending = 0;
   let done = 0;
 
-  let html = '';
-
   data.forEach(o => {
-
     if (o.price) done++; else pending++;
 
     html += `
       <tr>
         <td>#${o.id}</td>
         <td>${o.name}</td>
-        <td>${o.service}</td>
         <td>${o.address}</td>
+        <td>${o.service}</td>
         <td>
-          ${o.price 
-            ? '<span class="done">Validé</span>' 
-            : '<span class="pending">En attente</span>'}
+          <span class="status ${o.price ? 'done' : 'pending'}">
+            ${o.price ? 'Validé' : 'En attente'}
+          </span>
         </td>
         <td>${o.price ? o.price + " €" : "-"}</td>
-        <td>
-          <button onclick="openModal(${o.id})">💰</button>
+        <td class="action">
+          <button onclick="devis(${o.id})">💰</button>
         </td>
       </tr>
     `;
   });
 
   document.getElementById('orders').innerHTML = html;
+  document.getElementById('total').innerText = data.length;
   document.getElementById('pending').innerText = pending;
   document.getElementById('done').innerText = done;
 
@@ -184,27 +183,21 @@ async function load() {
     data: {
       labels: ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'],
       datasets: [{
-        data: [2,4,3,6,5,3,4]
+        data: [3,6,4,8,7,4,6]
       }]
     }
   });
 }
 
-function openModal(id) {
-  currentId = id;
-  document.getElementById('modal').style.display = 'block';
-}
+function devis(id) {
+  const price = prompt("Prix (€):");
+  if (!price) return;
 
-async function save() {
-  const price = document.getElementById('price').value;
-
-  await fetch('/devis', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ id: currentId, price })
-  });
-
-  location.reload();
+  fetch('/devis', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({ id, price })
+  }).then(() => location.reload());
 }
 
 load();
