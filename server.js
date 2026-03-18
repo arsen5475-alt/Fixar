@@ -4,20 +4,17 @@ const app = express();
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// главная страница
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/site.html');
 });
 
-// API
 app.post('/order', (req, res) => {
-  console.log('Новый заказ:', req.body);
+  console.log(req.body);
   res.json({ success: true });
 });
 
-// ВАЖНО: Railway PORT
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log('Fixar running on port ' + PORT);
+  console.log('Server running on ' + PORT);
 });
