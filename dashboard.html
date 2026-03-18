@@ -8,52 +8,86 @@
 
 <style>
 body { margin:0; font-family:Arial; background:#0f0f0f; color:white; }
+
+/* SIDEBAR */
 .sidebar {
-  width:220px; height:100vh; background:#111; position:fixed;
+  width:220px;
+  height:100vh;
+  background:#111;
+  position:fixed;
   padding:20px;
 }
-.sidebar h2 { color:#ff6a00; }
-.menu div {
-  margin:15px 0; cursor:pointer; color:#aaa;
-}
+.logo { font-size:22px; font-weight:bold; color:#ff6a00; margin-bottom:30px; }
+.menu div { margin:15px 0; color:#aaa; cursor:pointer; }
 .menu div:hover { color:white; }
 
-.content {
-  margin-left:220px; padding:20px;
-}
+/* CONTENT */
+.content { margin-left:220px; padding:20px; }
 
+/* CARDS */
+.cards { display:flex; gap:15px; }
 .card {
-  background:#1a1a1a; padding:20px; border-radius:12px;
-  display:inline-block; width:22%; margin-right:2%;
+  background:#1a1a1a;
+  padding:20px;
+  border-radius:12px;
+  flex:1;
 }
 
+/* TABLE */
 .orders {
   margin-top:30px;
   background:#1a1a1a;
   padding:20px;
   border-radius:12px;
 }
+table { width:100%; border-collapse:collapse; }
+th { text-align:left; color:#888; padding-bottom:10px; }
+td { padding:10px 0; border-bottom:1px solid #333; }
 
-.order {
-  border-bottom:1px solid #333;
-  padding:10px 0;
-}
-
+/* BUTTON */
 button {
   background:#ff6a00;
   border:none;
-  padding:6px 12px;
+  padding:6px 10px;
   border-radius:6px;
   color:white;
   cursor:pointer;
+}
+
+/* STATUS */
+.pending { color:#ffaa00; }
+.done { color:#00ff99; }
+
+/* MODAL */
+.modal {
+  display:none;
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:#000a;
+}
+.modal-box {
+  background:#222;
+  padding:20px;
+  width:300px;
+  margin:100px auto;
+  border-radius:10px;
+}
+input {
+  width:100%;
+  padding:10px;
+  margin:10px 0;
+  border:none;
+  border-radius:6px;
 }
 </style>
 </head>
 
 <body>
 
+<!-- SIDEBAR -->
 <div class="sidebar">
-  <h2>FIXAR</h2>
+  <div class="logo">FIXAR</div>
   <div class="menu">
     <div>🏠 Dashboard</div>
     <div>📦 Commandes</div>
@@ -61,29 +95,45 @@ button {
   </div>
 </div>
 
+<!-- CONTENT -->
 <div class="content">
 
 <h1>Panneau de commandes</h1>
 
-<div>
-  <div class="card">Commandes: <span id="total">0</span></div>
+<div class="cards">
+  <div class="card">Total: <span id="total">0</span></div>
   <div class="card">En attente: <span id="pending">0</span></div>
-  <div class="card">En cours: 0</div>
-  <div class="card">Terminées: 0</div>
+  <div class="card">Validé: <span id="done">0</span></div>
 </div>
 
-<canvas id="chart" height="100"></canvas>
+<canvas id="chart" height="80"></canvas>
 
-<div class="orders" id="orders"></div>
+<div class="orders">
+  <h2>Commandes</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Client</th>
+        <th>Service</th>
+        <th>Adresse</th>
+        <th>Status</th>
+        <th>Prix</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="orders"></tbody>
+  </table>
+</div>
 
 </div>
 
 <!-- MODAL -->
-<div id="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
-background:#000a;">
-  <div style="background:#222; padding:20px; margin:100px auto; width:300px;">
-    <h3>Devis (€)</h3>
-    <input id="price" style="width:100%; padding:10px; margin:10px 0;">
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <h3>Entrer le devis (€)</h3>
+    <input id="price" placeholder="Ex: 250">
     <button onclick="save()">Valider</button>
   </div>
 </div>
@@ -97,21 +147,37 @@ async function load() {
 
   document.getElementById('total').innerText = data.length;
 
+  let pending = 0;
+  let done = 0;
+
   let html = '';
+
   data.forEach(o => {
+
+    if (o.price) done++; else pending++;
+
     html += `
-      <div class="order">
-        <b>${o.name}</b> (${o.service})<br>
-        📞 ${o.phone}<br>
-        📍 ${o.address}<br>
-        ${o.price ? "💰 " + o.price + " €" : ""}
-        <br>
-        <button onclick="openModal(${o.id})">💰 Devis</button>
-      </div>
+      <tr>
+        <td>#${o.id}</td>
+        <td>${o.name}</td>
+        <td>${o.service}</td>
+        <td>${o.address}</td>
+        <td>
+          ${o.price 
+            ? '<span class="done">Validé</span>' 
+            : '<span class="pending">En attente</span>'}
+        </td>
+        <td>${o.price ? o.price + " €" : "-"}</td>
+        <td>
+          <button onclick="openModal(${o.id})">💰</button>
+        </td>
+      </tr>
     `;
   });
 
   document.getElementById('orders').innerHTML = html;
+  document.getElementById('pending').innerText = pending;
+  document.getElementById('done').innerText = done;
 
   new Chart(document.getElementById('chart'), {
     type: 'line',
