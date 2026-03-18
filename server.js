@@ -4,23 +4,42 @@ const path = require('path');
 const app = express();
 
 app.use(express.json());
-app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, 'public')));
 
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dashboard.html'));
-});
+// ХРАНЕНИЕ (пока в памяти)
+let orders = [];
 
-app.get('/form', (req, res) => {
-  res.sendFile(path.join(__dirname, 'form.html'));
-});
-
+// отправка заказа
 app.post('/order', (req, res) => {
-  console.log("Order:", req.body);
+  const order = {
+    id: Date.now(),
+    ...req.body
+  };
+
+  orders.push(order);
+
+  console.log("Новый заказ:", order);
+
   res.json({ success: true });
 });
 
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log("Server running on " + PORT);
+// получить все заказы
+app.get('/orders', (req, res) => {
+  res.json(orders);
 });
+
+// страницы
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'site.html'));
+});
+
+app.get('/form', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'form.html'));
+});
+
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log("Server started"));
