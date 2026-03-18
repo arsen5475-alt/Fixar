@@ -4,9 +4,8 @@ const path = require('path');
 const app = express();
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname)); // ВАЖНО
 
-// ХРАНЕНИЕ (пока в памяти)
 let orders = [];
 
 // отправка заказа
@@ -17,28 +16,27 @@ app.post('/order', (req, res) => {
   };
 
   orders.push(order);
-
   console.log("Новый заказ:", order);
 
   res.json({ success: true });
 });
 
-// получить все заказы
+// получить заказы
 app.get('/orders', (req, res) => {
   res.json(orders);
 });
 
 // страницы
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'site.html'));
+  res.sendFile(path.join(__dirname, 'site.html'));
 });
 
 app.get('/form', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'form.html'));
+  res.sendFile(path.join(__dirname, 'form.html'));
 });
 
 app.get('/dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+  res.sendFile(path.join(__dirname, 'dashboard.html'));
 });
 
 const PORT = process.env.PORT || 3000;
