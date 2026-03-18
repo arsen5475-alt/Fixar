@@ -5,7 +5,7 @@ app.use(express.json());
 app.use(express.static(__dirname));
 
 app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/site.html');
+  res.sendFile(__dirname + '/dashboard.html');
 });
 
 app.post('/order', (req, res) => {
